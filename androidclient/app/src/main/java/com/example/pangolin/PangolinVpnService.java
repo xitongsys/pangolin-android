@@ -104,7 +104,7 @@ public class PangolinVpnService extends VpnService {
                     PangolinVpnService.this.protect(udp.socket());
 
                     VpnService.Builder builder = PangolinVpnService.this.new Builder();
-                    builder.setMtu(1500)
+                    builder.setMtu(1400)
                             .addAddress(localIP, localPrefixLength)
                             .addRoute("0.0.0.0", 0)
                             .addDnsServer(dns)
@@ -121,8 +121,8 @@ public class PangolinVpnService extends VpnService {
                             byte[] buf = new byte[MAX_PACKET_SIZE];
                             int ln = in.read(buf);
                             if (ln > 0) {
-                                byte[] cmpbuf = Compress.compress(Arrays.copyOfRange(buf, 0, ln));
-                                ByteBuffer bf = ByteBuffer.wrap(cmpbuf);
+                                byte[] data = Arrays.copyOfRange(buf, 0, ln);
+                                ByteBuffer bf = ByteBuffer.wrap(data);
                                 udp.write(bf);
                             }
 
@@ -132,8 +132,7 @@ public class PangolinVpnService extends VpnService {
                                 bf.limit(ln); bf.rewind();
                                 buf = new byte[ln];
                                 bf.get(buf);
-                                byte[] undata = Compress.uncompress(buf);
-                                out.write(undata);
+                                out.write(buf);
                             }
 
                         }catch(Exception e){
@@ -155,7 +154,7 @@ public class PangolinVpnService extends VpnService {
                 try{
                     FileInputStream in = new FileInputStream(localTunnel.getFileDescriptor());
                     OutputStream out = tcpSocket.getOutputStream();
-                    TcpPacket.write(Compress.compress(token.getBytes()), out);
+                    TcpPacket.write(token.getBytes(), out);
 
                     while(!isInterrupted()){
                         try {
@@ -163,7 +162,7 @@ public class PangolinVpnService extends VpnService {
                             int ln = in.read(buf);
                             if (ln > 0) {
                                 byte[] endata = encryption.encrypt(Arrays.copyOfRange(buf, 0, ln));
-                                TcpPacket.write(Compress.compress(endata), out);
+                                TcpPacket.write(endata, out);
                             }
 
                         }catch(Exception e){
@@ -189,8 +188,8 @@ public class PangolinVpnService extends VpnService {
                             byte[] buf = new byte[MAX_PACKET_SIZE];
                             int ln = TcpPacket.read(buf, in);
                             if (ln > 0) {
-                                byte[] undata = Compress.uncompress(Arrays.copyOfRange(buf, 0, ln));
-                                out.write(encryption.decrypt(undata));
+                                byte[] data = Arrays.copyOfRange(buf, 0, ln);
+                                out.write(encryption.decrypt(data));
                             }
 
                         }catch(Exception e){
