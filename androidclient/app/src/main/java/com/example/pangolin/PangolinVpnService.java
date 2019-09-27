@@ -1,12 +1,20 @@
 package com.example.pangolin;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.VpnService;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.NotificationBuilderWithBuilderAccessor;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.io.FileInputStream;
@@ -75,7 +83,8 @@ public class PangolinVpnService extends VpnService {
                 token = ex.getString("token");
                 encryption = new Encryption(token);
 
-                Notification.Builder builder = new Notification.Builder(this);
+                String chanId = createNotificationChannel("pangolin", "pangolin");
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, chanId);
                 builder.setContentIntent(pendingIntent)
                         .setSmallIcon(R.mipmap.ic_launcher)
                         .setContentTitle("Pangolin")
@@ -89,6 +98,15 @@ public class PangolinVpnService extends VpnService {
             Log.e("onStartCommmand", e.toString());
         }
         return START_STICKY;
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private String createNotificationChannel(String channelId, String channelName){
+        NotificationChannel chan = new NotificationChannel(channelId,
+                channelName, NotificationManager.IMPORTANCE_NONE);
+        NotificationManager service = getSystemService(NotificationManager.class);
+        service.createNotificationChannel(chan);
+        return channelId;
     }
 
     private void initUdpThread() {
