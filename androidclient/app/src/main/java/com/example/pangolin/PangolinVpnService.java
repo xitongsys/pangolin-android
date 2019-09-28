@@ -102,6 +102,7 @@ public class PangolinVpnService extends VpnService {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private String createNotificationChannel(String channelId, String channelName){
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return "";
         NotificationChannel chan = new NotificationChannel(channelId,
                 channelName, NotificationManager.IMPORTANCE_NONE);
         NotificationManager service = getSystemService(NotificationManager.class);
